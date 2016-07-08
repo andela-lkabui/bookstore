@@ -10,8 +10,9 @@ class TestBookStore(TestCase):
 
     def setUp(self):
         self.client = Client()
-        book = 
-
+        self.category = Category(name="Programming")
+        self.category.save()
+        
     def tearDown(self):
         pass
 
@@ -23,12 +24,13 @@ class TestBookStore(TestCase):
         """
         url = reverse('search')
         data = {
-            'name' = 'Django How to Code'
+            'name_field': 'Django How to Code'
         }
         response = self.client.get(url, data)
         self.assertEqual(response.status_code, 200)
         self.assertFalse(
-            '<li>{0}</li>'.format(data.get('name')) in response.content
+            '<li>{0}</li>'.format(data.get('name')) in response.content,
+            msg='Search by name should not return a book in the result'
         )
 
     def test_existing_book_search_by_name(self):
@@ -39,15 +41,18 @@ class TestBookStore(TestCase):
         """
         url = reverse('search')
         data = {
-            'name' = 'Django How to Code'
+            'name_field': 'Django How to Code'
         }
+        book = Book(category=self.category, name="Django How to Code")
+        book.save()
         response = self.client.get(url, data)
         self.assertEqual(response.status_code, 200)
         self.assertTrue(
-            '<li>{0}</li>'.format(data.get('name')) in response.content
+            '<li>{0}</li>'.format(data.get('name_field')) in response.content,
+            msg='Search by name should return a book in the result'
         )
 
-    def test_search_by_category(self):
+    def test_existing_book_search_by_category(self):
         """
         Test search functionality.
 
@@ -55,9 +60,31 @@ class TestBookStore(TestCase):
         """
         url = reverse('search')
         book_category = 'Programming'
+        book = Book(category=self.category, name="Django How to Code")
+        book.save()
+        data = {
+            'category_field': book.category.name
+        }
+        response = self.client.get(url, data)
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(
+            '<li>{0}</li>'.format(book.name) in response.content,
+            msg='Search by category should return a book in the result'
+        )
 
-        response = self.client.get(url)
+    def test_non_existing_book_search_by_category(self):
+        """
+        Test search functionality.
+
+        Tests retrieval of non existent book when user enters a book category.
+        """
+        url = reverse('search')
+        data = {
+            'category_field': 'Programming'
+        }
+        response = self.client.get(url, data)
         self.assertEqual(response.status_code, 200)
         self.assertFalse(
-            '<li>{0}</li>'.format(data.get('name')) in response.content
+            '<li>{0}</li>'.format(data.get('category_field')) in response.content,
+            msg='Search by category should not return a book in the result'
         )
