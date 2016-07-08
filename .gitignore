@@ -1,0 +1,8 @@
+# Ignore sqlite database
+db.sqlite3
+
+# Ignore System files
+.DS_Store
+
+# Ignore compiled python files
+*.pyc
